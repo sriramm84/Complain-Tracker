@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ComplainX — Complaint Management System</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/css/style.css" />
+    <style>
+        /* Sticky footer layout */
+        html, body { height: 100%; }
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: #f5f6f8;
+        }
+        main { flex: 1; }
+
+        .portal-btn {
+            display: block; width: 100%; padding: 13px 16px;
+            border-radius: 4px; border: 1px solid #d1d5db;
+            background: #ffffff; color: #111827;
+            font-size: 0.85rem; font-weight: 500;
+            text-align: left; text-decoration: none;
+            margin-bottom: 10px;
+            transition: background 0.15s ease, border-color 0.15s ease;
+        }
+        .portal-btn:hover { background: #f9fafb; border-color: #9ca3af; color: #111827; }
+        .portal-btn .hint { font-size: 0.72rem; color: #9ca3af; float: right; margin-top: 1px; }
+        .dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+        .dot-green  { background:#16a34a; }
+        .dot-blue   { background:#2563eb; }
+        .dot-yellow { background:#d97706; }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <nav class="navbar navbar-expand-lg bg-white border-bottom">
+            <div class="container">
+                <a class="navbar-brand fw-bold" href="/">ComplainX</a>
+                <button class="navbar-toggler" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#navMenu"
+                    aria-controls="navMenu" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse justify-content-end" id="navMenu">
+                    <ul class="navbar-nav gap-2 align-items-center">
+                        <li class="nav-item"><a href="/login"    class="btn btn-outline-secondary btn-sm">Login</a></li>
+                        <li class="nav-item"><a href="/register" class="btn btn-primary btn-sm">Register</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="container py-5">
+            <div class="row align-items-center g-5 justify-content-center">
+
+                <!-- Left: title + status sample cards -->
+                <div class="col-lg-5 col-12">
+                    <p style="font-size:0.72rem;font-weight:600;letter-spacing:1px;color:#9ca3af;text-transform:uppercase;margin-bottom:14px;">
+                        Complaint Management System
+                    </p>
+                    <h1 style="font-size:2.2rem;font-weight:700;line-height:1.2;letter-spacing:-0.4px;margin-bottom:14px;">
+                        Submit, Track<br />and Resolve Issues
+                    </h1>
+                    <p style="font-size:0.9rem;color:#6b7280;line-height:1.8;margin-bottom:28px;">
+                        A complaint tracking platform for users, staff, and administrators.
+                        Submit issues and track resolution in real time.
+                    </p>
+
+                    <div class="d-flex flex-column gap-2 d-none d-lg-flex">
+                        <div class="card border" style="border-radius:6px;">
+                            <div class="card-body d-flex align-items-center gap-3 py-2 px-3">
+                                <div class="dot dot-green"></div>
+                                <div>
+                                    <div style="font-size:0.83rem;font-weight:600;">Billing Error</div>
+                                    <div style="font-size:0.73rem;color:#9ca3af;">Closed</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card border" style="border-radius:6px;">
+                            <div class="card-body d-flex align-items-center gap-3 py-2 px-3">
+                                <div class="dot dot-blue"></div>
+                                <div>
+                                    <div style="font-size:0.83rem;font-weight:600;">Service Outage</div>
+                                    <div style="font-size:0.73rem;color:#9ca3af;">In Progress</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card border" style="border-radius:6px;">
+                            <div class="card-body d-flex align-items-center gap-3 py-2 px-3">
+                                <div class="dot dot-yellow"></div>
+                                <div>
+                                    <div style="font-size:0.83rem;font-weight:600;">Technical Issue</div>
+                                    <div style="font-size:0.73rem;color:#9ca3af;">Under Review</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: login portal -->
+                <div class="col-lg-4 col-md-6 col-12">
+                    <div style="background:#ffffff;border:1px solid #d1d5db;border-radius:8px;padding:32px 28px;">
+                        <div style="font-size:1rem;font-weight:700;color:#111827;margin-bottom:4px;">Get started</div>
+                        <div style="font-size:0.78rem;color:#9ca3af;margin-bottom:24px;">Sign in to your account</div>
+
+                        <a href="/login" class="btn btn-primary w-100 fw-semibold mb-3"
+                            style="padding:10px;font-size:0.9rem;">Login</a>
+
+                        <div style="border-top:1px solid #f3f4f6;margin-top:8px;padding-top:14px;font-size:0.75rem;color:#9ca3af;text-align:center;">
+                            No account? <a href="/register" style="color:#2563eb;text-decoration:none;">Register here</a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer sticks to bottom due to flex layout -->
+    <footer style="border-top:1px solid #e5e7eb;padding:20px 0;background:#ffffff;">
+        <div class="container d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span style="font-size:0.82rem;font-weight:600;">ComplainX</span>
+            <span style="font-size:0.75rem;color:#9ca3af;">Complaint Management System — Web Technologies Project</span>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

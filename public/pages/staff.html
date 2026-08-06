@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Staff — ComplainX</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body style="background:#f5f6f8;">
+
+    <!-- ═══ LOGIN SCREEN ═══════════════════════════════════════ -->
+    <!-- ═══ STAFF DASHBOARD — server already verified staff role before serving this page ══ -->
+    <div id="dashboard">
+
+        <nav class="navbar">
+            <div class="container-fluid px-4">
+                <span class="navbar-brand">ComplainX <span class="role-label">Staff</span></span>
+                <div class="d-flex align-items-center gap-3">
+                    <span id="staffName" style="font-size:0.8rem;color:#6b7280;"></span>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="staffLogout()">Sign Out</button>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container py-4" style="max-width:960px;">
+
+            <!-- Stats -->
+            <div class="row g-2 mb-4" id="statsRow"></div>
+
+            <!-- Filters -->
+            <div class="filter-bar">
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label">Search</label>
+                        <input type="text" id="searchInput" class="form-control form-control-sm"
+                            placeholder="Title or complaint ID..."
+                            onkeyup="if(event.keyCode===13)loadComplaints()" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Status</label>
+                        <select id="statusFilter" class="form-select form-select-sm">
+                            <option value="All">All Status</option>
+                            <option value="Assigned">Assigned</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Resolved">Resolved</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Priority</label>
+                        <select id="priorityFilter" class="form-select form-select-sm">
+                            <option value="All">All Priority</option>
+                            <option value="High">High</option>
+                            <option value="Medium">Medium</option>
+                            <option value="Low">Low</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">&nbsp;</label>
+                        <button class="btn btn-primary btn-sm w-100" onclick="loadComplaints()">Apply</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Complaint cards -->
+            <div id="complaintsList"></div>
+
+        </div>
+    </div>
+
+
+    <!-- ═══ COMPLAINT DETAIL / UPDATE MODAL ════════════════════ -->
+    <div class="modal fade" id="detailModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content" style="border-radius:6px;border:1px solid #d1d5db;">
+                <div class="modal-header" style="border-bottom:1px solid #f3f4f6;padding:14px 20px;">
+                    <h6 class="modal-title" id="modalTitle" style="font-size:0.84rem;font-weight:600;"></h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body" id="modalBody" style="padding:20px;"></div>
+
+                <div class="modal-footer" style="border-top:1px solid #f3f4f6;padding:14px 20px;">
+                    <div class="w-100">
+
+                        <!-- Shown for terminal statuses (Closed / Resolved / Rejected) -->
+                        <div id="terminalStatusMsg" style="display:none;font-size:0.82rem;font-weight:600;padding:8px 0;"></div>
+
+                        <!-- Hidden for terminal statuses -->
+                        <div id="statusUpdateForm">
+                            <div class="row g-2 mb-2">
+                                <div class="col-md-5">
+                                    <label class="form-label">Update Status *</label>
+                                    <select id="newStatus" class="form-select form-select-sm">
+                                        <option value="">-- select new status --</option>
+                                        <option value="In Progress">In Progress</option>
+                                        <option value="Resolved">Resolved</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-7">
+                                    <label class="form-label">Note (optional)</label>
+                                    <input type="text" id="statusNote" class="form-control form-control-sm"
+                                        placeholder="Add a brief note about this update..." />
+                                </div>
+                            </div>
+                            <div class="d-flex gap-2 align-items-center">
+                                <button class="btn btn-primary btn-sm" onclick="updateStatus()">Update Status</button>
+                                <button class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                                <span id="statusMsg" style="font-size:0.78rem;margin-left:4px;"></span>
+                            </div>
+                        </div>
+
+                        <!-- Close button always visible -->
+                        <div id="terminalCloseBtn" style="display:none;margin-top:6px;">
+                            <button class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/staff.js"></script>
+</body>
+</html>

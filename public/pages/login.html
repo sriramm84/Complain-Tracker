@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="complainApp">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login — ComplainX</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body class="bg-light d-flex align-items-center justify-content-center" style="min-height:100vh;"
+    ng-controller="AuthCtrl" ng-cloak>
+
+    <div class="w-100" style="max-width:420px; padding:20px;">
+        <div class="card border shadow-sm" id="loginCard">
+            <div class="card-body p-4 p-md-5">
+
+                <a href="/" class="text-muted small d-block mb-4 text-decoration-none">← Back</a>
+                <h4 class="fw-bold mb-1">ComplainX</h4>
+                <p class="text-secondary small mb-4">Welcome back. Please sign in.</p>
+
+                <div class="alert alert-success py-2 small" ng-show="successMsg">{{ successMsg }}</div>
+                <div class="alert alert-danger py-2 small" ng-show="errorMsg">{{ errorMsg }}</div>
+
+                <form name="loginForm" ng-submit="login()" novalidate>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-medium text-secondary">Email</label>
+                        <input type="email" id="emailInput" class="form-control form-control-sm"
+                            ng-model="formData.email" placeholder="you@example.com"
+                            autocomplete="username"
+                            required />
+                        <div class="invalid-feedback">Enter a valid email address.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-medium text-secondary">Password</label>
+                        <input type="password" id="passwordInput" class="form-control form-control-sm"
+                            ng-model="formData.password" placeholder="Your password"
+                            autocomplete="current-password"
+                            required />
+                        <div class="invalid-feedback">Password is required.</div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 fw-semibold" ng-disabled="loading">
+                        <span ng-if="loading" class="spinner-border spinner-border-sm me-2"></span>
+                        <span ng-if="!loading">Login</span>
+                        <span ng-if="loading">Signing in...</span>
+                    </button>
+                </form>
+
+                <p class="text-center text-muted small mt-3 mb-0">
+                    Don't have an account? <a href="/register" class="text-primary fw-medium">Register</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.3/angular.min.js"></script>
+    <script src="/js/auth.js"></script>
+</body>
+</html>

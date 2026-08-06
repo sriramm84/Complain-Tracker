@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="adminApp">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin — ComplainX</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/css/style.css" />
+    <style>
+        .action-panel { background:#f8fafc; border:1px solid #e5e7eb; border-radius:6px; padding:12px 14px; margin-top:10px; }
+        .adv-filters { display:none; }
+        .adv-filters.open { display:block; }
+    </style>
+</head>
+<body ng-controller="AdminCtrl" ng-cloak>
+
+    <div>
+        <nav class="navbar">
+            <div class="container-fluid px-4">
+                <span class="navbar-brand">ComplainX <span class="role-label">Admin</span></span>
+                <div class="d-flex align-items-center gap-3">
+                    <span style="font-size:0.8rem;color:#6b7280;">{{ adminName }}</span>
+                    <button class="btn btn-outline-secondary btn-sm" ng-click="logout()">Sign Out</button>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container py-4" style="max-width:1100px;">
+
+            <!-- Stats -->
+            <div class="row g-2 mb-4">
+                <div class="col-6 col-sm-4 col-md" ng-repeat="s in statCards">
+                    <div class="stat-card">
+                        <div class="stat-val">{{ s.val }}</div>
+                        <div class="stat-label">{{ s.label }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <ul class="nav nav-tabs mb-4">
+                <li class="nav-item"><a class="nav-link" ng-class="{'active':activeTab==='complaints'}" ng-click="switchTab('complaints')" href="#">Complaints</a></li>
+                <li class="nav-item"><a class="nav-link" ng-class="{'active':activeTab==='tracking'}"   ng-click="switchTab('tracking')"   href="#">Tracking Log</a></li>
+                <li class="nav-item"><a class="nav-link" ng-class="{'active':activeTab==='users'}"      ng-click="switchTab('users')"      href="#">Users</a></li>
+                <li class="nav-item"><a class="nav-link" ng-class="{'active':activeTab==='categories'}" ng-click="switchTab('categories')" href="#">Categories</a></li>
+            </ul>
+
+
+            <!-- COMPLAINTS TAB -->
+            <div ng-show="activeTab==='complaints'">
+
+                <!-- Always-visible quick bar -->
+                <div class="d-flex gap-2 mb-2 align-items-center flex-wrap">
+                    <input type="text" class="form-control form-control-sm" style="max-width:260px;"
+                        ng-model="filterSearch" placeholder="Search title, ID, description..."
+                        ng-keyup="$event.keyCode===13 && loadComplaints()" />
+                    <select class="form-select form-select-sm" style="max-width:150px;" ng-model="filterStatus" ng-change="loadComplaints()">
+                        <option value="">All Status</option>
+                        <option ng-repeat="s in statusOptions" value="{{ s }}">{{ s }}</option>
+                    </select>
+                    <button class="btn btn-primary btn-sm" ng-click="loadComplaints()">Search</button>
+                    <button class="btn btn-outline-secondary btn-sm" ng-click="showFilters=!showFilters">
+                        {{ showFilters ? '▲ Less' : '▼ More Filters' }}
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" ng-click="clearFilters()">Clear</button>
+                    <button class="btn btn-outline-secondary btn-sm ms-auto" ng-click="exportCSV()">Export CSV</button>
+                </div>
+
+                <!-- Advanced filters — hidden by default -->
+                <div class="filter-bar mb-3 adv-filters" ng-class="{'open': showFilters}">
+                    <div class="row g-2">
+                        <div class="col-md-2">
+                            <label class="form-label">Complaint ID</label>
+                            <input type="text" class="form-control form-control-sm" ng-model="filterComplaintId" placeholder="e.g. CX1" />
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">User Name</label>
+                            <input type="text" class="form-control form-control-sm" ng-model="filterUserName" placeholder="User name..." />
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Staff Name</label>
+                            <input type="text" class="form-control form-control-sm" ng-model="filterStaffName" placeholder="Staff name..." />
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Category</label>
+                            <select class="form-select form-select-sm" ng-model="filterCategory">
+                                <option value="">All Categories</option>
+                                <option ng-repeat="cat in categories" ng-value="cat._id">{{ cat.name }}</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Priority</label>
+                            <select class="form-select form-select-sm" ng-model="filterPriority">
+                                <option value="">All</option>
+                                <option value="High">High</option>
+                                <option value="Medium">Medium</option>
+                                <option value="Low">Low</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">From Date</label>
+                            <input type="date" class="form-control form-control-sm" ng-model="filterDateFrom" />
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">To Date</label>
+                            <input type="date" class="form-control form-control-sm" ng-model="filterDateTo" />
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <button class="btn btn-primary btn-sm" ng-click="loadComplaints()">Apply</button>
+                    </div>
+                </div>
+
+                <div style="font-size:0.78rem;color:#6b7280;margin-bottom:10px;">{{ complaints.length }} complaint(s) shown</div>
+
+                <div class="text-center py-5" style="color:#9ca3af;font-size:0.82rem;" ng-if="loadingComplaints">
+                    <span class="spinner-border spinner-border-sm me-2"></span> Loading...
+                </div>
+                <div class="text-center py-5" style="color:#9ca3af;font-size:0.82rem;"
+                    ng-if="!loadingComplaints && complaints.length===0">No complaints found.</div>
+
+                <div class="complaint-card" ng-repeat="c in complaints track by c._id">
+                    <div style="padding:14px 16px;">
+
+                        <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap mb-1">
+                            <div>
+                                <div style="font-size:0.84rem;font-weight:600;">
+                                    <span style="color:#1e3a5f;font-size:0.74rem;font-weight:700;background:#eff6ff;
+                                        padding:2px 8px;border-radius:3px;border:1px solid #bfdbfe;margin-right:8px;">
+                                        {{ c.complaintId || 'No ID' }}
+                                    </span>{{ c.title }}
+                                </div>
+                                <div class="meta-text mt-1">
+                                    {{ c.submittedBy.name }} ({{ c.submittedBy.email }})
+                                    <span ng-if="c.submittedBy.phone"> &bull; Ph: {{ c.submittedBy.phone }}</span>
+                                    &bull; {{ c.createdAt | date:'d MMM yyyy' }}
+                                    <span ng-if="c.assignedTo">
+                                        &bull; Assigned to <strong>{{ c.assignedTo.name }}</strong>
+                                        <span ng-if="c.assignedTo.phone"> ({{ c.assignedTo.phone }})</span>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-1 flex-wrap">
+                                <span class="badge badge-cat">{{ c.category ? c.category.name : '' }}</span>
+                                <span class="badge" ng-class="getPriorityClass(c.priority)">{{ c.priority }}</span>
+                                <span class="badge" ng-class="getStatusClass(c.status)">{{ c.status }}</span>
+                            </div>
+                        </div>
+
+                        <p style="font-size:0.8rem;color:#6b7280;margin:6px 0 8px;">{{ c.description }}</p>
+
+                        <div style="font-size:0.78rem;margin-bottom:6px;" ng-if="c.attachment">
+                            Attachment: <a ng-href="{{ c.attachment }}" target="_blank" style="color:#2563eb;">View file</a>
+                        </div>
+                        <div style="background:#f9fafb;border-left:3px solid #d1d5db;padding:6px 10px;font-size:0.78rem;margin-bottom:8px;" ng-if="c.adminNote">
+                            Note: {{ c.adminNote }}
+                        </div>
+
+                        <!-- Timeline -->
+                        <div ng-if="c.statusHistory && c.statusHistory.length > 0" style="margin-bottom:8px;">
+                            <button class="btn btn-outline-secondary btn-sm" style="font-size:0.72rem;padding:2px 8px;"
+                                ng-click="c.showTimeline = !c.showTimeline">
+                                {{ c.showTimeline ? 'Hide Timeline' : 'Show Timeline' }}
+                            </button>
+                            <div class="timeline" ng-if="c.showTimeline">
+                                <div class="timeline-item" ng-repeat="h in c.statusHistory">
+                                    <div class="timeline-dot"></div>
+                                    <div class="timeline-text">
+                                        <strong>{{ h.status }}</strong>
+                                        <span style="color:#6b7280;"> by {{ h.changedBy }}
+                                            <span ng-if="h.changedByRole" style="font-size:0.7rem;background:#f3f4f6;padding:1px 5px;border-radius:3px;margin-left:2px;text-transform:uppercase;">{{ h.changedByRole }}</span>
+                                        </span>
+                                    </div>
+                                    <div style="font-size:0.73rem;color:#9ca3af;font-style:italic;" ng-if="h.note">{{ h.note }}</div>
+                                    <div class="timeline-date">{{ h.date | date:'d MMM yyyy, h:mm a' }}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <!-- Bottom action bar — slim -->
+                        <div class="d-flex gap-2 mt-2 align-items-center flex-wrap">
+
+                            <!-- Actions button: hidden for Closed/Rejected (nothing useful inside) -->
+                            <button class="btn btn-outline-primary btn-sm" style="font-size:0.75rem;"
+                                ng-if="c.status !== 'Closed' && c.status !== 'Rejected'"
+                                ng-click="c.showActions = !c.showActions">
+                                {{ c.showActions ? '▲ Close Actions' : '▼ Actions' }}
+                            </button>
+
+                            <!-- Status label for terminal states instead of Actions button -->
+                            <span ng-if="c.status === 'Closed'"
+                                style="font-size:0.73rem;color:#16a34a;font-weight:600;">
+                                ✓ Case closed
+                            </span>
+                            <span ng-if="c.status === 'Rejected'"
+                                style="font-size:0.73rem;color:#dc2626;font-weight:600;">
+                                ✗ Rejected
+                            </span>
+
+                            <!-- Confirm button: only when Resolved and not yet confirmed -->
+                            <button class="btn btn-success btn-sm"
+                                ng-if="canConfirm(c)"
+                                ng-click="confirmResolution(c)">✓ Confirm &amp; Close</button>
+
+                            <button class="btn btn-outline-danger btn-sm"
+                                ng-click="deleteComplaint(c._id, $index)">Delete</button>
+                        </div>
+
+                        <!-- Expandable action panel -->
+                        <div class="action-panel" ng-if="c.showActions">
+                            <div class="row g-2 align-items-end">
+                                <div class="col-md-3">
+                                    <label class="form-label" style="font-size:0.75rem;font-weight:600;">1. Change Status</label>
+                                    <select class="form-select form-select-sm" ng-model="c._newStatus">
+                                        <option value="">-- no change --</option>
+                                        <option ng-repeat="s in adminStatusOptions" value="{{ s }}">{{ s }}</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label" style="font-size:0.75rem;font-weight:600;">2. Admin Note <span style="font-weight:400;color:#9ca3af;">(sent only on status change)</span></label>
+                                    <input type="text" class="form-control form-control-sm" ng-model="c._newNote"
+                                        placeholder="Optional note to user..." />
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label" style="font-size:0.75rem;">&nbsp;</label>
+                                    <button class="btn btn-primary btn-sm w-100" ng-click="updateComplaint(c)">Update</button>
+                                </div>
+                                <div class="col-12"><hr style="margin:6px 0;border-color:#e5e7eb;" /></div>
+
+                                <!-- Assign section: only shown when complaint can still be assigned -->
+                                <div class="col-md-4" ng-if="canAssign(c)">
+                                    <label class="form-label" style="font-size:0.75rem;font-weight:600;">3. Assign to Staff</label>
+                                    <select class="form-select form-select-sm" ng-model="c._assignStaffId">
+                                        <option value="">-- select staff --</option>
+                                        <option ng-repeat="s in staffList" ng-value="s._id">
+                                            {{ s.name }}{{ s.phone ? ' (' + s.phone + ')' : '' }}
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2" ng-if="canAssign(c)">
+                                    <label class="form-label" style="font-size:0.75rem;">&nbsp;</label>
+                                    <button class="btn btn-outline-primary btn-sm w-100"
+                                        ng-disabled="!c._assignStaffId"
+                                        ng-click="assignComplaint(c)">Assign</button>
+                                </div>
+                            </div>
+                            <div style="font-size:0.78rem;margin-top:8px;" ng-show="c._updateMsg"
+                                ng-style="{'color': c._updateErr ? '#dc2626' : '#16a34a'}">
+                                {{ c._updateMsg }}
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- TRACKING LOG TAB -->
+            <div ng-show="activeTab==='tracking'">
+                <div class="filter-bar mb-3">
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label">Status</label>
+                            <select class="form-select form-select-sm" ng-model="logFilterStatus">
+                                <option value="">All</option>
+                                <option value="Assigned">Assigned</option>
+                                <option value="In Progress">In Progress</option>
+                                <option value="Resolved">Resolved</option>
+                                <option value="Closed">Closed</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">From</label>
+                            <input type="date" class="form-control form-control-sm" ng-model="logFilterDateFrom" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">To</label>
+                            <input type="date" class="form-control form-control-sm" ng-model="logFilterDateTo" />
+                        </div>
+                        <div class="col-md-3 d-flex gap-2">
+                            <button class="btn btn-primary btn-sm flex-fill" ng-click="loadLogs()">Filter</button>
+                            <button class="btn btn-outline-secondary btn-sm flex-fill"
+                                ng-click="logFilterStatus='';logFilterDateFrom='';logFilterDateTo='';loadLogs()">Clear</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center py-5" style="color:#9ca3af;" ng-if="loadingLogs">
+                    <span class="spinner-border spinner-border-sm me-2"></span> Loading...
+                </div>
+                <div style="background:#fff;border:1px solid #d1d5db;border-radius:6px;overflow-x:auto;" ng-if="!loadingLogs">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>ID</th><th>Title</th><th>Priority</th>
+                                <th>User</th><th>Phone</th>
+                                <th>Assigned To</th><th>Staff Phone</th>
+                                <th>Assigned By</th><th>Assigned At</th>
+                                <th>Status</th><th>Completed</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="log in logs track by log._id">
+                                <td style="font-weight:600;color:#1e3a5f;white-space:nowrap;">{{ log.complaintId }}</td>
+                                <td>{{ log.complaint ? log.complaint.title : '' }}</td>
+                                <td><span class="badge" ng-class="getPriorityClass(log.complaint ? log.complaint.priority : '')">{{ log.complaint ? log.complaint.priority : '' }}</span></td>
+                                <td>{{ log.user ? log.user.name : '' }}</td>
+                                <td class="meta-text">{{ log.user ? (log.user.phone || '—') : '' }}</td>
+                                <td>{{ log.assignedTo ? log.assignedTo.name : '' }}</td>
+                                <td class="meta-text">{{ log.assignedTo ? (log.assignedTo.phone || '—') : '' }}</td>
+                                <td class="meta-text">{{ log.assignedBy ? log.assignedBy.name : '' }}</td>
+                                <td class="meta-text" style="white-space:nowrap;">{{ log.assignedAt | date:'d MMM yyyy, h:mm a' }}</td>
+                                <td><span class="badge" ng-class="getLogStatusClass(log.status)">{{ log.status }}</span></td>
+                                <td class="meta-text">{{ log.completedAt ? (log.completedAt | date:'d MMM yyyy, h:mm a') : '—' }}</td>
+                            </tr>
+                            <tr ng-if="logs.length===0">
+                                <td colspan="11" class="text-center py-3" style="color:#9ca3af;font-size:0.8rem;">No logs found.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+
+            <!-- USERS TAB -->
+            <div ng-show="activeTab==='users'">
+
+                <div class="alert alert-info" style="font-size:0.82rem;margin-bottom:16px;">
+                    <strong>Note:</strong> After changing a user's role, they must log out and log back in for the change to take effect.
+                </div>
+
+                <div class="filter-bar mb-3">
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <label class="form-label">Search</label>
+                            <input type="text" class="form-control form-control-sm" ng-model="userSearch" placeholder="Name or email..." />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Filter by Role</label>
+                            <select class="form-select form-select-sm" ng-model="userRoleFilter">
+                                <option value="">All Roles</option>
+                                <option value="user">User</option>
+                                <option value="admin">Admin</option>
+                                <option value="staff">Staff</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button class="btn btn-primary btn-sm w-100" ng-click="loadUsers()">Refresh</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="background:#fff;border:1px solid #d1d5db;border-radius:6px;overflow:auto;">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr><th>Name</th><th>Email</th><th>Phone</th><th>Current Role</th><th>Registered</th><th>Change Role</th><th>Action</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="u in filteredUsersList track by u._id">
+                                <td>{{ u.name }}</td>
+                                <td>{{ u.email }}</td>
+                                <td class="meta-text">{{ u.phone || '—' }}</td>
+                                <td><span class="badge" ng-class="getRoleBadge(u.role)">{{ u.role }}</span></td>
+                                <td class="meta-text">{{ u.createdAt | date:'d MMM yyyy' }}</td>
+                                <td>
+                                    <select class="form-select form-select-sm role-select-inline"
+                                        ng-model="u._pendingRole"
+                                        ng-disabled="u._id==currentAdminId">
+                                        <option value="">-- select role --</option>
+                                        <option value="user"  ng-if="u.role !== 'user'">User</option>
+                                        <option value="staff" ng-if="u.role !== 'staff'">Staff</option>
+                                        <option value="admin" ng-if="u.role !== 'admin'">Admin</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <button class="btn btn-primary btn-sm"
+                                        ng-disabled="!u._pendingRole || u._id==currentAdminId"
+                                        ng-click="changeRole(u)">Save</button>
+                                    <span style="font-size:0.72rem;margin-left:4px;display:inline-block;max-width:180px;" ng-show="u._roleMsg"
+                                        ng-style="{'color':u._roleErr?'#dc2626':'#16a34a'}">{{ u._roleMsg }}</span>
+                                    <span style="font-size:0.72rem;color:#9ca3af;margin-left:4px;" ng-if="u._id==currentAdminId">(your account)</span>
+                                </td>
+                            </tr>
+                            <tr ng-if="filteredUsersList.length===0">
+                                <td colspan="7" class="text-center py-3" style="color:#9ca3af;font-size:0.8rem;">No users found.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+
+            <!-- CATEGORIES TAB -->
+            <div ng-show="activeTab==='categories'">
+                <div class="card mb-3">
+                    <div style="padding:18px 20px;">
+                        <div class="section-title">Add New Category</div>
+                        <div class="alert alert-success" ng-show="catMsg">{{ catMsg }}</div>
+                        <div class="alert alert-danger"  ng-show="catErr">{{ catErr }}</div>
+                        <div class="row g-2 align-items-end">
+                            <div class="col-md-4">
+                                <label class="form-label">Name *</label>
+                                <input type="text" class="form-control form-control-sm" ng-model="newCatName" placeholder="e.g. Network Issue" />
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label">Description (optional)</label>
+                                <input type="text" class="form-control form-control-sm" ng-model="newCatDesc" placeholder="Brief description..." />
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">&nbsp;</label>
+                                <button class="btn btn-primary btn-sm w-100" ng-click="addCategory()">Add Category</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div style="background:#fff;border:1px solid #d1d5db;border-radius:6px;overflow:hidden;">
+                    <table class="table table-hover mb-0">
+                        <thead><tr><th>Name</th><th>Description</th><th>Added</th><th>Action</th></tr></thead>
+                        <tbody>
+                            <tr ng-repeat="cat in categories track by cat._id">
+                                <td style="font-weight:500;">{{ cat.name }}</td>
+                                <td class="meta-text">{{ cat.description || '—' }}</td>
+                                <td class="meta-text">{{ cat.createdAt | date:'d MMM yyyy' }}</td>
+                                <td><button class="btn btn-outline-danger btn-sm" ng-click="deleteCategory(cat)">Delete</button></td>
+                            </tr>
+                            <tr ng-if="categories.length===0">
+                                <td colspan="4" class="text-center py-3" style="color:#9ca3af;font-size:0.8rem;">No categories yet.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.3/angular.min.js"></script>
+    <script src="/js/admin.js"></script>
+</body>
+</html>
