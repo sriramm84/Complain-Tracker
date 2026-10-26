@@ -5,6 +5,7 @@ var Complaint     = require('../models/Complaint');
 var AssignmentLog = require('../models/AssignmentLog');
 var User          = require('../models/User');
 var mailer        = require('../config/mailer');
+var escapeRegex   = require('../utils/escapeRegex');
 
 
 async function getAssignedComplaints(req, res) {
@@ -14,8 +15,8 @@ async function getAssignedComplaints(req, res) {
         if (req.query.priority && req.query.priority !== 'All') filter.priority = req.query.priority;
         if (req.query.search && req.query.search.trim()) {
             filter.$or = [
-                { title:       { $regex: req.query.search, $options: 'i' } },
-                { complaintId: { $regex: req.query.search, $options: 'i' } }
+                { title:       { $regex: escapeRegex(req.query.search), $options: 'i' } },
+                { complaintId: { $regex: escapeRegex(req.query.search), $options: 'i' } }
             ];
         }
         var complaints = await Complaint.find(filter)

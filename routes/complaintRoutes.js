@@ -9,8 +9,9 @@ var multer = require('multer');
 var path = require('path');
 var fs = require('fs');
 
-// FEATURE 4: Multer storage config — saves files to public/uploads/
-var uploadDir = path.join(__dirname, '../public/uploads');
+// FEATURE 4: Multer storage config — saves files to uploads/ (outside public/,
+// served only to permitted users by routes/uploadRoutes.js)
+var uploadDir = path.join(__dirname, '../uploads');
 if (!fs.existsSync(uploadDir)) { fs.mkdirSync(uploadDir, { recursive: true }); }
 
 var storage = multer.diskStorage({

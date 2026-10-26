@@ -6,6 +6,7 @@ var AssignmentLog = require('../models/AssignmentLog');
 var Category      = require('../models/Category');
 var User          = require('../models/User');
 var mailer        = require('../config/mailer');
+var escapeRegex   = require('../utils/escapeRegex');
 
 
 // ── Backfill complaintId for old complaints ───────────────────
@@ -34,7 +35,7 @@ async function getAllComplaints(req, res) {
         if (req.query.priority && req.query.priority !== '')
             filter.priority = req.query.priority;
         if (req.query.complaintId && req.query.complaintId.trim())
-            filter.complaintId = { $regex: req.query.complaintId.trim(), $options: 'i' };
+            filter.complaintId = { $regex: escapeRegex(req.query.complaintId.trim()), $options: 'i' };
 
         // category is always sent as a 24-char ObjectId hex string from ng-value
         if (req.query.category && req.query.category !== '') {
@@ -42,27 +43,27 @@ async function getAllComplaints(req, res) {
                 filter.category = req.query.category;
             } else {
                 // Fallback: search by name
-                var catDoc = await Category.findOne({ name: { $regex: new RegExp('^' + req.query.category + '$', 'i') } });
+                var catDoc = await Category.findOne({ name: { $regex: new RegExp('^' + escapeRegex(req.query.category) + '$', 'i') } });
                 if (catDoc) filter.category = catDoc._id;
                 else        return res.json({ success: true, complaints: [] });
             }
         }
 
         if (req.query.userName && req.query.userName.trim()) {
-            var uList = await User.find({ name: { $regex: req.query.userName.trim(), $options: 'i' } }).select('_id').lean();
+            var uList = await User.find({ name: { $regex: escapeRegex(req.query.userName.trim()), $options: 'i' } }).select('_id').lean();
             filter.submittedBy = { $in: uList.map(function(u) { return u._id; }) };
         }
 
         if (req.query.staffName && req.query.staffName.trim()) {
-            var sList = await User.find({ name: { $regex: req.query.staffName.trim(), $options: 'i' }, role: 'staff' }).select('_id').lean();
+            var sList = await User.find({ name: { $regex: escapeRegex(req.query.staffName.trim()), $options: 'i' }, role: 'staff' }).select('_id').lean();
             filter.assignedTo = { $in: sList.map(function(s) { return s._id; }) };
         }
 
         if (req.query.search && req.query.search.trim()) {
             filter.$or = [
-                { title:       { $regex: req.query.search, $options: 'i' } },
-                { description: { $regex: req.query.search, $options: 'i' } },
-                { complaintId: { $regex: req.query.search, $options: 'i' } }
+                { title:       { $regex: escapeRegex(req.query.search), $options: 'i' } },
+                { description: { $regex: escapeRegex(req.query.search), $options: 'i' } },
+                { complaintId: { $regex: escapeRegex(req.query.search), $options: 'i' } }
             ];
         }
 
@@ -446,7 +447,7 @@ async function addCategory(req, res) {
         var description = (req.body.description || '').trim();
         if (!name || name.length < 2)
             return res.status(400).json({ success: false, message: 'Category name must be at least 2 characters.' });
-        var ex = await Category.findOne({ name: { $regex: new RegExp('^' + name + '$', 'i') } });
+        var ex = await Category.findOne({ name: { $regex: new RegExp('^' + escapeRegex(name) + '$', 'i') } });
         if (ex) return res.status(400).json({ success: false, message: 'Category already exists.' });
         var cat = await Category.create({ name: name, description: description });
         return res.status(201).json({ success: true, message: 'Category added.', category: cat });

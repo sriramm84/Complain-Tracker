@@ -1,10 +1,12 @@
 // controllers/complaintController.js
 
 var mongoose  = require('mongoose');
+var crypto    = require('crypto');
 var Complaint = require('../models/Complaint');
 var Category  = require('../models/Category');
 var User      = require('../models/User');
 var mailer    = require('../config/mailer');
+var escapeRegex = require('../utils/escapeRegex');
 
 
 // ── PRIORITY DETECTION ────────────────────────────────────────
@@ -56,7 +58,7 @@ async function submitComplaint(req, res) {
             return res.status(400).json({ success: false, message: 'Selected category does not exist.' });
 
         // Duplicate title check
-        var escapedTitle = title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        var escapedTitle = escapeRegex(title);
         var existing = await Complaint.findOne({
             submittedBy: req.session.userId,
             title: { $regex: new RegExp('^' + escapedTitle + '$', 'i') }
@@ -111,9 +113,9 @@ async function getMyComplaints(req, res) {
 
         if (req.query.search && req.query.search.trim()) {
             filter.$or = [
-                { title:       { $regex: req.query.search, $options: 'i' } },
-                { description: { $regex: req.query.search, $options: 'i' } },
-                { complaintId: { $regex: req.query.search, $options: 'i' } }
+                { title:       { $regex: escapeRegex(req.query.search), $options: 'i' } },
+                { description: { $regex: escapeRegex(req.query.search), $options: 'i' } },
+                { complaintId: { $regex: escapeRegex(req.query.search), $options: 'i' } }
             ];
         }
         if (req.query.status   && req.query.status   !== '') filter.status   = req.query.status;
@@ -173,7 +175,7 @@ async function requestEditOtp(req, res) {
         if (complaint.status !== 'Submitted')
             return res.status(400).json({ success: false, message: 'Only Submitted complaints can be edited.' });
 
-        var otp    = Math.floor(100000 + Math.random() * 900000).toString();
+        var otp    = crypto.randomInt(100000, 1000000).toString();
         var expiry = new Date(Date.now() + 2 * 60 * 1000); // 2 minutes
         await User.findByIdAndUpdate(req.session.userId, { otp: otp, otpExpiry: expiry });
 
